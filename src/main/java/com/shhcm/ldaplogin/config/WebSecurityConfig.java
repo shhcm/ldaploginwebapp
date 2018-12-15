@@ -1,5 +1,6 @@
 package com.shhcm.ldaplogin.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -10,8 +11,13 @@ import org.springframework.security.ldap.DefaultSpringSecurityContextSource;
 
 import java.util.Arrays;
 
+
 @Configuration
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+    @Autowired
+    private MyLdapAuthoritiesPopulator authoritiesPopulator;
+
+
     protected void configure(HttpSecurity httpSecurity) throws  Exception {
         httpSecurity.authorizeRequests()
                 .antMatchers("/css/**").permitAll()
@@ -33,6 +39,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             .userDnPatterns("uid={0},ou=people")
             .groupSearchBase("ou=groups")
             .contextSource(contextSourceEmbeddedLdap())
+            .ldapAuthoritiesPopulator(authoritiesPopulator)
             .passwordCompare()
             .passwordEncoder(new LdapShaPasswordEncoder())
             .passwordAttribute("userPassword");
