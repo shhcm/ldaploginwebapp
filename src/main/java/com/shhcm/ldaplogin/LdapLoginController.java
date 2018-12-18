@@ -26,7 +26,7 @@ public class LdapLoginController {
 
     @RequestMapping("/login")
     private String login() {
-        LOG.info("/login aufgerufen.");
+        LOG.info("/login browsed.");
         return LOGIN_TMPL;
     }
 
@@ -44,14 +44,14 @@ public class LdapLoginController {
         httpSession.setAttribute("authorities", authorities);
         model.addAttribute("username", username);
 
-        LOG.info("/secure aufgerufen von User " + username);
+        LOG.info("/secure browsed by user " + username + " with authorities " + authorities);
 
         return SECURE_TMPL;
     }
 
     @RequestMapping("/logout")
     private String logout() {
-        LOG.info("/logout aufgerufen.");
+        LOG.info("/logout browsed.");
         SecurityContextHolder.clearContext();
         return LOGIN_TMPL;
     }

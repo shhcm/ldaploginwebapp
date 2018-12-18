@@ -1,6 +1,7 @@
 package com.shhcm.ldaplogin.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -17,6 +18,20 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private MyLdapAuthoritiesPopulator authoritiesPopulator;
 
+    @Value("${embedded_ldap}")
+    private boolean isEmbeddedLdap;
+
+    @Value("${spring.ldap.urls}")
+    private String ldapUrls;
+
+    @Value("${spring.ldap.base}")
+    private String ldapBase;
+
+    @Value("${spring.ldap.username}")
+    private String ldapUsername;
+
+    @Value("${spring.ldap.password}")
+    private String ldapPassword;
 
     protected void configure(HttpSecurity httpSecurity) throws  Exception {
         httpSecurity.authorizeRequests()
@@ -34,15 +49,31 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-            .ldapAuthentication()
-            .userDnPatterns("uid={0},ou=people")
-            .groupSearchBase("ou=groups")
-            .contextSource(contextSourceEmbeddedLdap())
-            .ldapAuthoritiesPopulator(authoritiesPopulator)
-            .passwordCompare()
-            .passwordEncoder(new LdapShaPasswordEncoder())
-            .passwordAttribute("userPassword");
+        if(!isEmbeddedLdap) {
+            // Real lap.
+            auth
+                    .ldapAuthentication()
+                    .contextSource()
+                    .url(ldapUrls)
+                    .managerDn(ldapUsername)
+                    .managerPassword(ldapPassword)
+                    .and()
+                    .userSearchBase(ldapBase)
+                    .userSearchFilter("(CN={0})")
+                    .ldapAuthoritiesPopulator(authoritiesPopulator);
+
+        } else {
+            // Development/testing, embedded ldap.
+            auth
+                .ldapAuthentication()
+                .userDnPatterns("uid={0},ou=people")
+                .groupSearchBase("ou=groups")
+                .contextSource(contextSourceEmbeddedLdap())
+                .ldapAuthoritiesPopulator(authoritiesPopulator)
+                .passwordCompare()
+                .passwordEncoder(new LdapShaPasswordEncoder())
+                .passwordAttribute("userPassword");
+        }
     }
 
     @Bean
